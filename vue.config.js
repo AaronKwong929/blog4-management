@@ -88,16 +88,23 @@ module.exports = {
                             module: 'element-ui',
                             entry: 'https://unpkg.com/element-ui/lib/index.js',
                             global: 'ELEMENT'
+                        },
+                        {
+                            module: 'vue-quill-editor',
+                            entry:
+                                'https://cdn.jsdelivr.net/npm/vue-quill-editor@3.0.6/dist/vue-quill-editor.min.js',
+                            global: 'VueQuillEditor'
                         }
                     ]
                 })
             );
-            config.externals = {
-                vue: 'Vue',
-                axios: 'axios',
-                'vue-router': 'VueRouter',
-                'element-ui': 'ELEMENT'
-            };
+            // config.externals = {
+            //     vue: 'Vue',
+            //     axios: 'axios',
+            //     'vue-router': 'VueRouter',
+            //     'element-ui': 'ELEMENT',
+            //     'vue-quill-editor': 'VueQuillEditor'
+            // };
         }
     },
     chainWebpack: config => {
