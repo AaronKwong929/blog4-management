@@ -10,7 +10,7 @@ const routes = [
         component: () => import('../views/Login.vue')
     },
     {
-        path: '/draft/:id',
+        path: '/draft/:articleId',
         component: () => import('../views/Draft.vue'),
         meta: { requireAuth: true }
     },

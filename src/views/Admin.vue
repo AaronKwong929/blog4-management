@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-loading.fullscreen.lock="loading" id="admin">
         <div class="tool-bar">
             <el-button
                 size="small"
@@ -16,13 +16,6 @@
                 >埋点日志</el-button
             >
             <el-button
-                size="small"
-                @click.prevent.native="updatePwdDialog = true"
-                class="tool-bar-item"
-                type="warning"
-                >修改密码</el-button
-            >
-            <el-button
                 @click.prevent.native="logout"
                 type="danger"
                 size="small"
@@ -37,7 +30,6 @@
                 clearable
                 placeholder="类型"
                 class="tool-bar-item"
-                @change="getArticle"
             >
                 <el-option
                     v-for="(item, index) in typeOptions"
@@ -52,7 +44,6 @@
                 clearable
                 placeholder="标签"
                 class="tool-bar-item"
-                @change="getArticle"
                 ><el-option
                     v-for="(item, index) in tagOptions"
                     :key="`tag` + index"
@@ -66,7 +57,6 @@
                 clearable
                 placeholder="状态"
                 class="tool-bar-item"
-                @change="getArticle"
                 ><el-option
                     v-for="(item, index) in publishOptions"
                     :key="`published` + index"
@@ -74,6 +64,13 @@
                     :label="item.label"
                 ></el-option>
             </el-select>
+            <el-button
+                type="success"
+                size="small"
+                @click.prevent.native="getArticle"
+                class="tool-bar-item"
+                >搜索</el-button
+            >
             <el-button
                 type="primary"
                 size="small"
@@ -165,7 +162,7 @@
                                 "
                                 size="small"
                                 type="text"
-                                >评价管理</el-button
+                                >评论管理</el-button
                             >
                             <el-button
                                 icon="el-icon-delete"
@@ -200,65 +197,6 @@
             </el-footer>
         </el-container>
         <el-dialog
-            title="修改密码"
-            :visible.sync="updatePwdDialog"
-            :append-to-body="true"
-            :lock-scroll="true"
-            :close-on-click-modal="false"
-        >
-            <el-form
-                ref="updatePwdForm"
-                :model="updatePwdForm"
-                label-width="100px"
-                :rules="updatePwdFormRules"
-            >
-                <el-row>
-                    <el-col :span="18" :push="2">
-                        <el-form-item label="旧密码" prop="oldPassword">
-                            <el-input
-                                size="small"
-                                type="password"
-                                v-model="updatePwdForm.oldPassword"
-                            >
-                            </el-input>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-                <el-row>
-                    <el-col :span="18" :push="2">
-                        <el-form-item label="新密码" prop="newPassword">
-                            <el-input
-                                size="small"
-                                type="password"
-                                v-model="updatePwdForm.newPassword"
-                            >
-                            </el-input>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-                <el-row>
-                    <el-col :span="18" :push="2">
-                        <el-form-item label="重复新密码" prop="newPassword2">
-                            <el-input
-                                size="small"
-                                type="password"
-                                v-model="updatePwdForm.newPassword2"
-                            >
-                            </el-input>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-            </el-form>
-            <div slot="footer">
-                <el-button @click.prevent.native="updatePwdDialog = false"
-                    >取 消</el-button
-                >
-                <el-button @click.prevent.native="modifyPassword" type="primary"
-                    >修 改</el-button
-                >
-            </div>
-        </el-dialog>
-        <el-dialog
             title="评论管理"
             :visible.sync="commentDialog"
             :append-to-body="true"
@@ -274,11 +212,10 @@
                 tooltip-effect="dark"
                 style="width: 99%;"
                 height="55vh"
-                :default-sort="{ prop: 'createdeAt', order: 'descending' }"
                 :row-class-name="tableRowClassName"
             >
                 <el-table-column
-                    prop="createdAt"
+                    prop="updatedAt"
                     label="发布时间"
                     min-width="10"
                     align="center"
@@ -319,6 +256,7 @@
             </el-table>
             <el-row>
                 <el-pagination
+                    background
                     :total="commentListCount"
                     :current-page.sync="commentPageIndex"
                     @current-change="val => handlePageIndexChange(val, 2)"
@@ -331,6 +269,7 @@
             :append-to-body="true"
             :lock-scroll="true"
             :close-on-click-modal="false"
+            width="60%"
         >
             <el-container>
                 <el-main>
@@ -343,7 +282,7 @@
                     >
                         <el-table-column
                             align="center"
-                            prop="createdAt"
+                            prop="updatedAt"
                             label="操作时间"
                             :formatter="dateFormat"
                         ></el-table-column>
@@ -354,6 +293,18 @@
                         >
                             <template slot-scope="scope">
                                 {{ eventCodeList[scope.row.eventCode] }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                            align="center"
+                            prop="eventStatus"
+                            label="状态"
+                        >
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.eventStatus === 0"
+                                    >成功</span
+                                >
+                                <span v-else>失败</span>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -367,10 +318,13 @@
                 "
                 >
                     <el-pagination
-                        layout="total, prev, pager, next, jumper"
+                        layout="total, sizes, prev, pager, next, jumper"
                         :total="eventTrackListCount"
                         :current-page.sync="eventTrackPageIndex"
                         @current-change="val => handlePageIndexChange(val, 3)"
+                        :page-size.sync="eventTrackPageSize"
+                        :page-sizes="[10, 20, 50]"
+                        @size-change="val => handlePageSizeChange(val, 3)"
                     ></el-pagination>
                 </el-footer>
             </el-container>
@@ -404,16 +358,22 @@
                     >
                         <el-table-column
                             align="center"
-                            prop="createdAt"
+                            prop="updatedAt"
                             label="操作时间"
                             :formatter="dateFormat"
+                            min-width="15"
                         ></el-table-column>
                         <el-table-column
                             align="center"
                             prop="content"
                             label="状态内容"
+                            min-width="45"
                         ></el-table-column>
-                        <el-table-column align="center" label="操作">
+                        <el-table-column
+                            min-width="10"
+                            align="center"
+                            label="操作"
+                        >
                             <template slot-scope="scope">
                                 <el-button
                                     size="small"
@@ -436,10 +396,14 @@
                 "
                 >
                     <el-pagination
-                        layout="total, prev, pager, next, jumper"
+                        layout="total, sizes, prev, pager, next, jumper"
                         :total="statusListCount"
+                        background
                         :current-page.sync="statusPageIndex"
                         @current-change="val => handlePageIndexChange(val, 4)"
+                        :page-size.sync="statusPageSize"
+                        :page-sizes="[5, 10, 20]"
+                        @size-change="val => handlePageSizeChange(val, 4)"
                     ></el-pagination>
                 </el-footer>
             </el-container>
@@ -485,12 +449,6 @@
 <script>
 export default {
     data() {
-        const checkPasswordSame = (rule, value, callback) => {
-            if (value !== this.updatePwdForm.newPassword) {
-                return callback(new Error(`两次输入密码不一致`));
-            }
-            callback();
-        };
         return {
             loading: false,
             searchForm: {
@@ -519,48 +477,17 @@ export default {
                 { value: 0, label: `未发布` },
                 { value: 1, label: `已发布` }
             ],
-            updatePwdDialog: false,
-            updatePwdForm: {
-                oldPassword: '',
-                newPassword: '',
-                newPassword2: ''
-            },
-            updatePwdFormRules: {
-                oldPassword: [
-                    {
-                        required: true,
-                        trigger: true,
-                        message: `旧密码不能为空`
-                    }
-                ],
-                newPassword: [
-                    {
-                        required: true,
-                        trigger: true,
-                        message: `新密码不能为空`
-                    }
-                ],
-                newPassword2: [
-                    {
-                        required: true,
-                        trigger: true,
-                        message: `新密码不能为空`
-                    },
-                    {
-                        trigger: `change`,
-                        validator: checkPasswordSame
-                    }
-                ]
-            },
             commentDialog: false,
             commentList: [],
             commentPageIndex: 1,
+            commentPageSize: 10,
             commentListCount: 0,
             articleId: ``,
             eventTrackDialog: false,
             eventTrackList: [],
             eventTrackListCount: 0,
             eventTrackPageIndex: 1,
+            eventTrackPageSize: 10,
             eventCodeList: {
                 1000: `注册`,
                 1001: `登陆`,
@@ -582,19 +509,22 @@ export default {
             statusDialog: false,
             statusList: [],
             statusListCount: 0,
+            statusPageIndex: 1,
+            statusPageSize: 5,
             statusForm: {
                 content: null
             },
             statusFormRules: {
-                content: [{ required: true, trigger: 'blur' }]
+                content: [
+                    { required: true, trigger: 'blur', message: `内容不能为空` }
+                ]
             },
-            statusPageIndex: 1,
             addStatusDialog: false
         };
     },
     methods: {
         logout() {
-            return this.$login.logout();
+            return this.$auth.logout();
         },
         getArticle() {
             this.loading = true;
@@ -615,17 +545,23 @@ export default {
                 });
         },
         newArticle() {
-            this.$axios.postFetch(this.$api.newArticle).then(res => {
-                this.$router.push(
-                    this.$router.push(`/draft/${res.data.articleId}`)
-                );
-            });
+            this.loading = true;
+            this.$axios
+                .postFetch(this.$api.newArticle)
+                .then(res => {
+                    this.$router.push(
+                        this.$router.push(`/draft/${res.data.articleId}`)
+                    );
+                })
+                .finally(() => {
+                    this.loading = false;
+                });
         },
         changeArticleStatus(row) {
             this.loading = true;
             this.$axios
                 .putFetch(this.$api.changeArticleStatus, {
-                    id: row._id
+                    articleId: row._id
                 })
                 .then(() => {
                     this.getArticle();
@@ -645,27 +581,27 @@ export default {
             }).then(() => {
                 this.loading = true;
                 this.$axios
-                    .deleteFetch(`${this.$api.adminDeleteDraft}${row._id}`)
+                    .deleteFetch(`${this.$api.deleteArticle}`, {
+                        articleId: row._id
+                    })
                     .then(() => {
                         this.getArticle();
-                    })
-                    .finally(() => {
-                        this.loading = false;
                     });
             });
         },
         /* 评论模块 */
-        getComment(id) {
+        getComment(articleId) {
             this.loading = true;
-            this.articleId = id;
+            this.articleId = articleId;
             this.$axios
-                .getFetch(this.$api.adminGetComment(id, this.commentPageIndex))
+                .postFetch(this.$api.getArticleComment, {
+                    pageIndex: this.commentPageIndex,
+                    pageSize: this.commentPageSize,
+                    articleId
+                })
                 .then(res => {
-                    if (res.totalCount === 0) {
-                        return this.$message.warning(`当前文章没有评论`);
-                    }
-                    this.commentList = res.resultList;
-                    this.commentListCount = res.totalCount;
+                    this.commentList = res.data.resultList;
+                    this.commentListCount = res.data.totalCount;
                     this.commentDialog = true;
                 })
                 .finally(() => {
@@ -675,17 +611,11 @@ export default {
         changeCommentStatus(row) {
             this.loading = true;
             this.$axios
-                .putFetch(this.$axios.adminChangeCommentStatus, {
+                .putFetch(this.$api.changeCommentStatus, {
                     commentId: row._id
                 })
                 .then(() => {
-                    this.$message.success(
-                        `${row.published ? `隐藏` : `展示`}成功`
-                    );
-                    this.getComment(row.articleId);
-                })
-                .finally(() => {
-                    this.loading = false;
+                    this.getComment(this.articleId);
                 });
         },
         deleteComment(row) {
@@ -693,24 +623,16 @@ export default {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
-            })
-                .then(() => {
-                    this.loading = true;
-                    this.$axios
-                        .deleteFetch(
-                            `${this.$api.adminDeleteComment}${row._id}`
-                        )
-                        .then(() => {
-                            this.$message.success(`删除成功`);
-                            this.getComment(this.articleId);
-                        })
-                        .finally(() => {
-                            this.loading = false;
-                        });
-                })
-                .catch(() => {
-                    this.$message.warning(`已取消删除评论`);
-                });
+            }).then(() => {
+                this.loading = true;
+                this.$axios
+                    .deleteFetch(`${this.$api.deleteComment}`, {
+                        commentId: row._id
+                    })
+                    .then(() => {
+                        this.getComment(this.articleId);
+                    });
+            });
         },
         /* 埋点日志模块 */
         openEventTrackDialog() {
@@ -718,29 +640,35 @@ export default {
             this.eventTrackDialog = true;
         },
         getEventTrack() {
+            this.loading = true;
             this.$axios
-                .postFetch(this.$api.adminGetEventTrack, {
-                    pageIndex: this.eventTrackPageIndex
+                .postFetch(this.$api.getEventTrack, {
+                    pageIndex: this.eventTrackPageIndex,
+                    pageSize: this.eventTrackPageSize
                 })
                 .then(res => {
-                    this.eventTrackListCount = res.totalCount;
-                    this.eventTrackList = res.resultList;
+                    this.eventTrackListCount = res.data.totalCount;
+                    this.eventTrackList = res.data.resultList;
+                })
+                .finally(() => {
+                    this.loading = false;
                 });
         },
         /* 最近状态模块 */
         openStatusDialog() {
-            this.getStauts();
+            this.getStatus();
             this.statusDialog = true;
         },
-        getStauts() {
+        getStatus() {
             this.loading = true;
             this.$axios
-                .getFetch(
-                    `${this.$api.adminStatus}?pageIndex=${this.statusPageIndex}`
-                )
+                .postFetch(this.$api.getStatus, {
+                    pageIndex: this.statusPageIndex,
+                    pageSize: this.statusPageSize
+                })
                 .then(res => {
-                    this.statusListCount = res.totalCount;
-                    this.statusList = res.resultList;
+                    this.statusListCount = res.data.totalCount;
+                    this.statusList = res.data.resultList;
                 })
                 .finally(() => {
                     this.loading = false;
@@ -749,12 +677,11 @@ export default {
         addStatus() {
             this.loading = true;
             this.$axios
-                .postFetch(this.$api.adminStatus, {
+                .putFetch(this.$api.addStatus, {
                     content: this.statusForm.content
                 })
                 .then(() => {
-                    this.$message.success(`新建状态成功`);
-                    this.getStauts();
+                    this.getStatus();
                 })
                 .finally(() => {
                     this.addStatusDialog = false;
@@ -765,22 +692,16 @@ export default {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
-            })
-                .then(() => {
-                    this.loading = true;
-                    this.$axios
-                        .deleteFetch(`${this.$api.adminStatus}?id=${row._id}`)
-                        .then(() => {
-                            this.$message.success(`已删除状态: ${row.content}`);
-                            this.getStauts();
-                        })
-                        .finally(() => {
-                            this.loading = false;
-                        });
-                })
-                .catch(() => {
-                    this.$message.warning(`已取消删除`);
-                });
+            }).then(() => {
+                this.loading = true;
+                this.$axios
+                    .deleteFetch(this.$api.deleteStatus, {
+                        statusId: row._id
+                    })
+                    .then(() => {
+                        this.getStatus();
+                    });
+            });
         },
         dateFormat(row, column) {
             return this.$dateFormat(
@@ -799,6 +720,14 @@ export default {
                 case 1:
                     this.pageSize = val;
                     this.getArticle();
+                    break;
+                case 3:
+                    this.eventTrackPageSize = val;
+                    this.getEventTrack();
+                    break;
+                case 4:
+                    this.statusPageSize = val;
+                    this.getStatus();
                     break;
                 default:
                     break;
@@ -820,7 +749,7 @@ export default {
                     break;
                 case 4:
                     this.statusPageIndex = val;
-                    this.getStauts();
+                    this.getStatus();
                     break;
                 default:
                     break;
@@ -835,39 +764,12 @@ export default {
                 type: null
             });
             this.getArticle();
-        },
-        /* 修改密码模块 */
-        modifyPassword() {
-            this.loading = false;
-            this.$axios
-                .putFetch(this.$api.changePassword, {
-                    name: localStorage.getItem(`name`),
-                    oldPassword: this.updatePwdForm.oldPassword,
-                    newPassword: this.updatePwdForm.newPassword
-                })
-                .then(() => {
-                    this.$message.success(`修改密码成功，请重新登录`);
-                    this.modifyPassworDialog = false;
-                    this.$auth.logout();
-                })
-                .finally(() => {
-                    this.loading = false;
-                });
         }
     },
     mounted() {
         this.getArticle();
     },
     watch: {
-        updatePwdDialog(newv) {
-            if (newv === false) {
-                this.$set(this, `updatePwdForm`, {
-                    oldPassword: null,
-                    newPassword: null,
-                    newPassword2: null
-                });
-            }
-        },
         commentDialog(newv) {
             if (newv === false) {
                 this.commentPageIndex = 1;
@@ -882,11 +784,11 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-// /deep/ .el-table .off-row {
-//     background: rgb(255, 252, 247);
-// }
-// /deep/ .el-table .on-row {
-//     background: #effce8;
-// }
+<style lang="scss">
+.el-table__row.off-row {
+    background: rgb(255, 252, 247) !important;
+}
+.el-table__row.on-row {
+    background: #effce8;
+}
 </style>

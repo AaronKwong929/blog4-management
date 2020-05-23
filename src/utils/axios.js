@@ -17,6 +17,10 @@ instance.interceptors.response.use(
     response => {
         if (response.status >= 200 && response.status < 300) {
             if (response.data.status === 0) {
+                Message({
+                    type: 'success',
+                    message: response.data.data.message
+                });
                 return response.data;
             } else {
                 Message({ type: `error`, message: response.data.message });
@@ -35,7 +39,6 @@ instance.interceptors.response.use(
                 case 500:
                     Message({ type: `error`, message: `接口错误` });
                     break;
-
                 case 404:
                     Message({ type: `error`, message: `接口不存在` });
                     break;
@@ -65,8 +68,12 @@ export const getFetch = async (url, params = {}, headers = {}) => {
     return await instance.get(url, { params, headers });
 };
 
-export const postFetch = async (url, data = {}) => {
-    return await instance.post(url, data);
+export const postFetch = async (url, data = {}, headers = {}) => {
+    return await instance.post(url, data, headers);
+};
+
+export const patchFetch = async (url, data = {}, headers = {}) => {
+    return await instance.patch(url, data, headers);
 };
 
 export const putFetch = async (url, data = {}, headers = {}) => {

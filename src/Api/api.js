@@ -4,24 +4,24 @@ export const getArticleIndex = `/admin/article/index`;
 
 export const newArticle = `/admin/article`;
 
-export const changeArticleStatus = `/admin/article`;
+export const changeArticleStatus = `/admin/article/status`;
 
 export const deleteArticle = `/admin/article`;
 
+export const getArticleComment = `/admin/comment`;
+
+export const changeCommentStatus = `/admin/comment`;
+
+export const deleteComment = `/admin/comment`;
+
+export const getStatus = `/admin/status`;
+
+export const addStatus = `/admin/status`;
+
+export const deleteStatus = `/admin/status`;
+
+export const getEventTrack = `/admin/event`;
+
 export const getDraft = `/admin/article`;
 
-export const updateDraft = `/admin/draft`;
-
-export const changePassword = `/admin/password`;
-
-export const adminGetComment = (id, index) => {
-    return `/admin/comment?articleId=${id}&pageIndex=${index}`;
-};
-
-export const adminChangeCommentStatus = `/admin/comment`;
-
-export const adminDeleteComment = `/admin/comment?commentId=`;
-
-export const adminGetEventTrack = `/admin/eventTrack`;
-
-export const adminStatus = `/admin/status`;
+export const saveDraft = `/admin/draft`;
