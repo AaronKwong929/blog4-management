@@ -7,6 +7,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
 const path = require('path');
 const HtmlWebpackExternalsPlugin = require('html-webpack-externals-plugin');
 module.exports = {
+    outputDir: 'management',
     devServer: {
         port: 8080,
         host: 'localhost',
