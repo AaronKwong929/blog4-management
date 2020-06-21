@@ -6,7 +6,7 @@ export default function(date, fmt) {
         'm+': date.getMinutes(), // 分
         's+': date.getSeconds(), // 秒
         'q+': Math.floor((date.getMonth() + 3) / 3), // 季度
-        'S': date.getMilliseconds() // 毫秒
+        S: date.getMilliseconds() // 毫秒
     };
     if (/(y+)/.test(fmt)) {
         fmt = fmt.replace(

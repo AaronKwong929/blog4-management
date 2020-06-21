@@ -90,12 +90,12 @@ module.exports = {
                             entry: 'https://unpkg.com/element-ui/lib/index.js',
                             global: 'ELEMENT'
                         },
-                        {
-                            module: 'vue-quill-editor',
-                            entry:
-                                'https://cdn.jsdelivr.net/npm/vue-quill-editor@3.0.6/dist/vue-quill-editor.min.js',
-                            global: 'VueQuillEditor'
-                        }
+                        // {
+                        //     module: 'vue-quill-editor',
+                        //     entry:
+                        //         'https://cdn.jsdelivr.net/npm/vue-quill-editor@3.0.6/dist/vue-quill-editor.min.js',
+                        //     global: 'VueQuillEditor'
+                        // }
                     ]
                 })
             );
